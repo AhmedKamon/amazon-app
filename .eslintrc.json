@@ -1,3 +1,4 @@
 {
-  "extends": [ "eslint:recomended", "next","next/core-web-vitals"]
+  "extends": [ "eslint:recomended", "next","next/core-web-vitals" ],
+  "env":{"es6": true}
 }

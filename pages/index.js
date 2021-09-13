@@ -8,17 +8,38 @@ import {
   CardActionArea,
   Button,
 } from '@material-ui/core';
+import { delBasePath } from 'next/dist/shared/lib/router/router';
 import NextLink from 'next/link';
 import Layout from '../components/Layout';
-import { data } from '../Utiles/data';
+import db from '../Utiles/db';
+import Product from '../models/product';
+import axios from 'axios';
+import { useRouter } from 'next/router';
+import { useContext } from 'react';
+import { Store } from '../Utiles/store';
 
-const Home = () => {
+const Home = ({ products }) => {
+  const { state, dispatch } = useContext(Store);
+  const router = useRouter();
+
+  console.log(products);
+  const addToCartHandler = async (product) => {
+    const existItem = state.cart.cartItems.find((x) => x._id === product._id);
+    const quantity = existItem ? existItem.quantity + 1 : 1;
+    const { data } = await axios.get(`/api/products/${product._id}`);
+    if (data.quantity < 0) {
+      window.alert('Sorry. Product is not available');
+      return;
+    }
+    dispatch({ type: 'CART_ADD_ITEM', payload: { ...product, quantity } });
+    router.push('/cart');
+  };
   return (
     <Layout>
       <div>
         <h1>Products</h1>
         <Grid container spacing={3}>
-          {data.products.map((product) => (
+          {products.map((product) => (
             <Grid item md={4} key={product.name}>
               <Card>
                 <NextLink href={`/product/${product.slug}`} passHref>
@@ -36,7 +57,12 @@ const Home = () => {
 
                 <CardActions>
                   <Typography>${product.price}</Typography>
-                  <Button size="small" color="primary" variant="contained">
+                  <Button
+                    onClick={() => addToCartHandler(product)}
+                    size="small"
+                    color="primary"
+                    variant="contained"
+                  >
                     Add To Cart
                   </Button>
                 </CardActions>
@@ -49,3 +75,14 @@ const Home = () => {
   );
 };
 export default Home;
+
+export async function getServerSideProps() {
+  await db.connect();
+  const products = await Product.find({}).lean();
+  await db.disconnect();
+  return {
+    props: {
+      products: products.map(db.convertDocToObj),
+    },
+  };
+}

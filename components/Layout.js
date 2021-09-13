@@ -7,6 +7,7 @@ import {
   ThemeProvider,
   CssBaseline,
   Switch,
+  Badge,
 } from '@material-ui/core';
 import { createTheme } from '@material-ui/core/styles';
 import Head from 'next/head';
@@ -18,7 +19,7 @@ import Cookies from 'js-cookie';
 
 export default function Layout({ title, description, children }) {
   const { state, dispatch } = useContext(Store);
-  const { darkMode } = state;
+  const { darkMode, cart } = state;
   const theme = createTheme({
     typography: {
       h1: {
@@ -44,9 +45,13 @@ export default function Layout({ title, description, children }) {
   });
   const classes = useStles();
   const darkModeHandler = () => {
-    dispatch({ type: darkMode ? 'DARK_MODE_OFF' : 'DARK_MODE_ON' });
+    console.log(darkMode, 'dark');
+
     const newDarkMode = !darkMode;
+
     Cookies.set('darkMode', newDarkMode ? 'ON' : 'OFF');
+    dispatch({ type: darkMode ? 'DARK_MODE_OFF' : 'DARK_MODE_ON' });
+    console.log(Cookies, 'cooki');
   };
   return (
     <div>
@@ -72,7 +77,18 @@ export default function Layout({ title, description, children }) {
             <Switch checked={darkMode} onChange={darkModeHandler}></Switch>
             <NextLink href="/cart" passHref>
               <Link>
-                <Typography>Cart</Typography>
+                <Typography>
+                  {cart.cartItems.length > 0 ? (
+                    <Badge
+                      color="secondary"
+                      badgeContent={cart.cartItems.length}
+                    >
+                      Cart
+                    </Badge>
+                  ) : (
+                    'Cart'
+                  )}
+                </Typography>
               </Link>
             </NextLink>
             <NextLink href="/login" passHref>
